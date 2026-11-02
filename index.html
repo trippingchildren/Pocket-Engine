@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pocket Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f2ff;--pn:#fff;--fg:#1c1840;--mu:#6b6890;--ac:#e8435f;--bd:#dcd8f5;--k:#7c3aed;--s:#0f8a5f;--n:#c2570c;--c:#8c89ab;--a:#d6336c;--ed:#fbfaff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14122b;--pn:#1d1a3a;--fg:#ece9ff;--mu:#9a96c4;--ac:#ff6b8b;--bd:#2f2a5c;--k:#b794ff;--s:#6ee7b7;--n:#fbbf24;--c:#6f6a9e;--a:#ff8fab;--ed:#171532}}
+:root[data-theme="dark"]{--bg:#14122b;--pn:#1d1a3a;--fg:#ece9ff;--mu:#9a96c4;--ac:#ff6b8b;--bd:#2f2a5c;--k:#b794ff;--s:#6ee7b7;--n:#fbbf24;--c:#6f6a9e;--a:#ff8fab;--ed:#171532}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif;overflow:hidden}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--bd);background:var(--pn)}
+h1{font:700 17px Sora,system-ui;margin:0;flex:1}
+button{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;min-height:40px}
+button.on{border-color:var(--ac);color:var(--ac)}
+button.run{background:var(--ac);color:#fff;border:0;font-weight:600;padding:8px 18px}
+main{position:relative;min-height:0}
+.p{display:none;position:absolute;inset:0;flex-direction:column;min-height:0}
+[data-tab=scene] #scene,[data-tab=code] #code,[data-tab=preview] #preview,[data-tab=console] #console{display:flex}
+nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bd);background:var(--pn)}
+nav button{border:0;border-radius:0;background:none;min-height:50px;color:var(--mu)}
+[data-tab=scene] [data-t=scene],[data-tab=code] [data-t=code],[data-tab=preview] [data-t=preview],[data-tab=console] [data-t=console]{color:var(--ac);font-weight:600}
+.ed{position:relative;flex:1;display:flex;min-height:0;background:var(--ed);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:var(--fs,16px);line-height:1.5}
+.files{display:flex;overflow-x:auto;border-bottom:1px solid var(--bd);background:var(--pn)}.files button{border:0;border-radius:0;background:none;color:var(--mu);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:13px}.files .on{color:var(--ac);box-shadow:inset 0 -2px var(--ac)}.keys .sg{border-color:var(--ac);color:var(--ac)}
+#ln{margin:0;padding:10px 8px;text-align:right;color:var(--c);border-right:1px solid var(--bd);user-select:none;overflow:hidden;min-width:38px}
+.wrap{position:relative;flex:1;min-width:0}
+#hl,#ta{position:absolute;inset:0;margin:0;padding:10px 12px;font:inherit;line-height:inherit;white-space:pre;overflow:auto;tab-size:2;border:0;letter-spacing:0}
+#hl{pointer-events:none;color:var(--fg);overflow:hidden}
+#ta{background:none;color:transparent;caret-color:var(--ac);resize:none;outline:none;-webkit-text-fill-color:transparent}
+i{font-style:normal}.k{color:var(--k)}.s{color:var(--s)}.n{color:var(--n)}.c{color:var(--c)}.a{color:var(--a)}
+.keys{display:flex;gap:6px;padding:6px;overflow-x:auto;border-top:1px solid var(--bd);background:var(--pn)}
+.keys button{min-width:42px;padding:6px 8px;font-family:'JetBrains Mono',monospace}
+.bar{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--bd);background:var(--pn)}
+.bar span{color:var(--mu);font-size:13px;margin-right:2px}
+#stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:repeating-conic-gradient(var(--bg) 0 25%,var(--pn) 0 50%) 0 0/24px 24px}
+#shell{position:relative;flex:none}
+#dev{position:absolute;left:0;top:0;transform-origin:0 0;background:#000;border:6px solid #000;outline:2px solid var(--bd);overflow:hidden}
+#dev iframe{width:100%;height:100%;border:0;display:block;background:#111827}
+.ov{position:absolute;pointer-events:none;background:#000}
+.list{flex:1;overflow:auto;padding:12px;font:13px/1.7 'JetBrains Mono',monospace}
+.list div{padding:2px 0;border-bottom:1px solid var(--bd)}
+.er{color:var(--ac)}
+h2{font:700 14px Sora,system-ui;margin:0;padding:12px 12px 0}
+@media (min-width:900px){
+ nav{grid-template-columns:repeat(3,160px);justify-content:start}
+ [data-t=preview]{display:none}
+ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,0.8fr)}
+ .p{position:relative;inset:auto}
+ #preview{display:flex;grid-column:2;grid-row:1;border-left:1px solid var(--bd)}
+ #scene,#code,#console{grid-column:1;grid-row:1}
+}
+</style></head>
+<body data-tab="code"><div class="app">
+<header><h1>Pocket Engine</h1><button id="live" title="Re-run while you type">Live</button><button class="run" id="run">Run</button></header>
+<main>
+<section class="p" id="scene">
+ <h2>Device</h2>
+ <div class="bar"><button data-d="ios" class="on">iPhone</button><button data-d="android">Android</button><button id="rot">Rotate</button></div>
+ <h2>Game templates (game.js)</h2>
+ <div class="bar"><button data-tpl="runner">Tap runner</button><button data-tpl="bubbles">Bubble pop</button><button data-tpl="catch">Paddle catch</button><button data-tpl="matter">Physics (Matter)</button></div>
+ <h2>Libraries (applied on next Run)</h2>
+ <div class="bar" id="libs"></div>
+ <h2>Editor</h2>
+ <div class="bar"><button id="fm">A−</button><button id="fp">A+</button><button id="th">Theme</button><button id="cp">Copy standalone HTML</button></div>
+ <h2>Live entities</h2>
+ <div class="list" id="ents">Run the game to see entities.</div>
+</section>
+<section class="p" id="code">
+ <div class="files" id="files"></div>
+ <div class="ed"><pre id="ln">1</pre><div class="wrap"><pre id="hl"></pre><textarea id="ta" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="Game code"></textarea></div></div>
+ <div class="keys" id="keys"></div>
+</section>
+<section class="p" id="preview">
+ <div class="bar"><span id="dl">iPhone</span><span id="fps"></span><button id="ps" style="margin-left:auto">Edit mode</button><button id="rs">Restart</button></div>
+ <div id="stage"><div id="shell"><div id="dev"><iframe id="fr" sandbox="allow-scripts" title="Game preview"></iframe><div class="ov" id="o1"></div><div class="ov" id="o2"></div></div></div></div>
+</section>
+<section class="p" id="console"><div class="list" id="log"></div></section>
+</main>
+<nav><button data-t="scene">Scene</button><button data-t="code">Code</button><button data-t="preview">Preview</button><button data-t="console">Console</button></nav>
+</div>
+<script type="text/plain" id="rt">
+(()=>{const S=window.__SAFE,cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W=innerWidth,H=innerHeight,dpr=devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;
+cv.style.cssText='width:100vw;height:100vh;display:block;touch-action:none';
+const ev={update:[],tap:[],draw:[]},ents=[],ps=[],post=(t,m)=>parent.postMessage({t,m},'*');
+let AC,sh=0,sel=null,ox=0,oy=0;
+const g=window.game={w:W,h:H,safe:S,score:0,bg:'#111827',paused:false,keys:{},tilt:{x:0,y:0},touch:{x:0,y:0,down:false},
+add(o){const e=Object.assign({x:0,y:0,w:32,h:32,vx:0,vy:0,gravity:0,color:'#fff',shape:'rect',solid:false,tag:'',grounded:false},o);ents.push(e);return e},
+remove(e){const i=ents.indexOf(e);if(i>-1)ents.splice(i,1)},
+each(t,f){ents.filter(e=>e.tag===t).forEach(f)},
+hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y},
+on(n,f){ev[n].push(f)},reset(){location.reload()},rand(a,b){return a+Math.random()*(b-a)},
+beep(f=440,d=.12,type='square'){try{AC=AC||new AudioContext();const o=AC.createOscillator(),v=AC.createGain();o.type=type;o.frequency.value=f;v.gain.value=.08;v.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(v);v.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}},
+burst(x,y,c='#fff',n=14){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=60+Math.random()*180;ps.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:.5,c})}},
+shake(m=8){sh=m}};
+window.log=(...a)=>post('log',a.map(String).join(' '));
+const pt=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+const inb=(n,p)=>p.x>n.x&&p.x<n.x+n.w&&p.y>n.y&&p.y<n.y+n.h;
+cv.addEventListener('pointerdown',e=>{const p=pt(e);
+if(g.paused){sel=ents.slice().reverse().find(n=>inb(n,p))||null;if(sel){ox=p.x-sel.x;oy=p.y-sel.y}return}
+g.touch={x:p.x,y:p.y,down:true};g.beep(660,.05);ev.tap.forEach(f=>f(p.x,p.y));ents.slice().forEach(n=>n.onTap&&inb(n,p)&&n.onTap(n))});
+cv.addEventListener('pointermove',e=>{const p=pt(e);g.touch.x=p.x;g.touch.y=p.y;if(g.paused&&sel){sel.x=p.x-ox;sel.y=p.y-oy}});
+addEventListener('pointerup',()=>{g.touch.down=false;if(sel){log((sel.tag||sel.shape)+' at x:'+(sel.x|0)+', y:'+(sel.y|0));sel=null}});
+addEventListener('keydown',e=>g.keys[e.key]=true);addEventListener('keyup',e=>g.keys[e.key]=false);
+addEventListener('deviceorientation',e=>{g.tilt={x:(e.gamma||0)/45,y:(e.beta||0)/45}});
+addEventListener('message',e=>{if(e.data&&e.data.cmd==='pause')g.paused=!g.paused});
+let last=performance.now(),fc=0;
+function step(dt){ents.slice().forEach(e=>{e.vy+=e.gravity*dt;e.x+=e.vx*dt;e.y+=e.vy*dt;e.grounded=false;
+if(e.gravity)ents.forEach(s=>{if(s.solid&&s!==e&&g.hit(e,s)&&e.vy>=0&&e.y+e.h-s.y<e.vy*dt+12){e.y=s.y-e.h;e.vy=0;e.grounded=true}});
+e.update&&e.update(e,dt)});
+ents.slice().forEach(a=>{if(a.onCollide)ents.forEach(b=>{if(a!==b&&g.hit(a,b))a.onCollide(b)})});
+ps.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt});for(let i=ps.length;i--;)if(ps[i].l<=0)ps.splice(i,1);
+sh*=.9;ev.update.forEach(f=>f(dt))}
+function draw(){cx.setTransform(dpr,0,0,dpr,0,0);cx.fillStyle=g.bg;cx.fillRect(0,0,W,H);
+if(sh>.5)cx.translate((Math.random()-.5)*sh,(Math.random()-.5)*sh);
+ents.forEach(e=>{cx.fillStyle=e.color;const z=e.size||32;
+if(e.shape==='circle'){cx.beginPath();cx.arc(e.x+e.w/2,e.y+e.h/2,e.w/2,0,7);cx.fill()}
+else if(e.shape==='text'){cx.font=z+'px sans-serif';cx.textAlign='center';cx.fillText(e.text,e.x+e.w/2,e.y+e.h/2+z/3)}
+else cx.fillRect(e.x,e.y,e.w,e.h);
+if(e.text&&e.shape!=='text'){cx.fillStyle='#fff';cx.font='14px sans-serif';cx.textAlign='center';cx.fillText(e.text,e.x+e.w/2,e.y+e.h/2+5)}
+if(g.paused){cx.strokeStyle='#ff6b8b';cx.strokeRect(e.x,e.y,e.w,e.h)}});
+ps.forEach(p=>{cx.globalAlpha=Math.max(p.l*2,0);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,4,4)});cx.globalAlpha=1;
+ev.draw.forEach(f=>f(cx));cx.fillStyle='#fff';cx.font='bold 18px sans-serif';cx.textAlign='left';
+cx.fillText(g.paused?'Edit mode: drag objects':'Score '+Math.floor(g.score),16+S.left,S.top+28)}
+function loop(n){const dt=Math.min((n-last)/1000,.05);last=n;fc++;try{if(!g.paused)step(dt);draw()}catch(er){post('err',er.message);return}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+setInterval(()=>{post('ents',{fps:fc*2,l:ents.slice(0,40).map(e=>(e.tag||e.shape)+' ('+(e.x|0)+', '+(e.y|0)+')')});fc=0},500);
+addEventListener('error',e=>post('err',e.message));})();
+</script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const T={runner:`// Tap to jump. Dodge the yellow blocks!
+const g = game;
+g.add({x:0, y:g.h-90, w:g.w, h:90, color:'#2f2a5c', solid:true});
+const p = g.add({x:70, y:g.h-150, w:36, h:36, color:'#ff6b8b', gravity:1800});
+let t = 0;
+g.on('tap', () => { if (p.grounded) { p.vy = -700; g.beep(520); } });
+g.on('update', dt => {
+  t += dt; g.score += dt;
+  if (t > 1.2) {
+    t = 0;
+    g.add({x:g.w, y:g.h-120, w:30, h:30, color:'#fbbf24',
+           vx:-300 - g.score * 8, tag:'hazard'});
+  }
+  g.each('hazard', h => {
+    if (h.x < -50) g.remove(h);
+    if (g.hit(p, h)) { g.shake(14); g.burst(p.x, p.y, '#ff6b8b'); log('Game over'); g.reset(); }
+  });
+});`,bubbles:`// Tap the bubbles!
+game.bg = '#14122b';
+let t = 0;
+game.on('update', dt => {
+  t += dt;
+  if (t > 0.6) {
+    t = 0;
+    const s = game.rand(36, 72);
+    const b = game.add({x:game.rand(0, game.w - s), y:game.h, w:s, h:s,
+      shape:'circle', vy:-game.rand(90, 210), tag:'bubble',
+      color:'hsl(' + (game.rand(0, 360) | 0) + ',80%,62%)'});
+    b.onTap = e => { game.score++; game.beep(300 + game.score * 20); game.burst(e.x, e.y, e.color); game.remove(e); };
+  }
+  game.each('bubble', b => { if (b.y < -90) game.remove(b); });
+});`,catch:`// Drag to move the basket (touch, mouse or arrow keys). Tilt works on supported phones.
+const g = game;
+const me = g.add({x:g.w/2-40, y:g.h-g.safe.bottom-60, w:80, h:22, color:'#6ee7b7'});
+let t = 0;
+g.on('update', dt => {
+  if (g.touch.down) me.x = g.touch.x - 40;
+  if (g.keys.ArrowLeft) me.x -= 400 * dt;
+  if (g.keys.ArrowRight) me.x += 400 * dt;
+  me.x += g.tilt.x * 500 * dt;
+  me.x = Math.max(0, Math.min(g.w - me.w, me.x));
+  t += dt;
+  if (t > 0.7) { t = 0; g.add({x:g.rand(0, g.w-40), y:-40, w:40, h:40, shape:'text', text:'🍎', size:34, vy:g.rand(140, 260), tag:'fruit'}); }
+  g.each('fruit', f => {
+    if (g.hit(f, me)) { g.score++; g.beep(700, .08); g.remove(f); }
+    else if (f.y > g.h) { g.remove(f); g.score = Math.max(0, g.score - 1); g.shake(6); }
+  });
+});`};
+const T2={matter:`// Matter.js physics: tap to drop boxes
+const { Engine, Bodies, Composite } = Matter;
+const g = game, eng = Engine.create();
+const wall = (x, y, w, h) => Bodies.rectangle(x, y, w, h, {isStatic:true});
+Composite.add(eng.world, [wall(g.w/2, g.h-40, g.w*2, 80), wall(-30, g.h/2, 60, g.h*2), wall(g.w+30, g.h/2, 60, g.h*2)]);
+g.on('tap', (x, y) => {
+  Composite.add(eng.world, Bodies.rectangle(x, y, g.rand(30, 60), g.rand(30, 60), {restitution:.5}));
+  g.beep(300, .06);
+});
+g.on('update', dt => Engine.update(eng, dt * 1000));
+g.on('draw', cx => {
+  Composite.allBodies(eng.world).forEach(b => {
+    cx.beginPath();
+    b.vertices.forEach((v, i) => i ? cx.lineTo(v.x, v.y) : cx.moveTo(v.x, v.y));
+    cx.closePath();
+    cx.fillStyle = b.isStatic ? '#2f2a5c' : '#ff6b8b';
+    cx.fill();
+  });
+});`};Object.assign(T,T2);
+const F={'game.js':T.runner,'index.html':`<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My page</title>
+</head>
+<body>
+  <h1>Hello, mobile</h1>
+  <button id="btn">Tap me</button>
+  <p id="out"></p>
+</body>
+</html>`,'style.css':`body {
+  font-family: system-ui, sans-serif;
+  background: #14122b;
+  color: #ece9ff;
+  padding: 24px;
+}
+button {
+  font-size: 18px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 12px;
+  background: #ff6b8b;
+  color: #fff;
+}`,'script.js':`let n = 0;
+document.getElementById('btn').onclick = () => {
+  n++;
+  document.getElementById('out').textContent = 'Taps: ' + n;
+  console.log('tap', n);
+};`,'main.py':`# Python 3.14 via Pyodide when available, else a Python 3 subset
+def fib(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+
+print("Hello from Python")
+print(list(fib(12)))
+for i in range(1, 4):
+    print("Row", i, "squared =", i * i)`};
+try{const s=JSON.parse(localStorage.getItem('pe2')||'{}');Object.assign(F,s)}catch(e){}
+let cur='game.js';
+const DEV={ios:{n:'iPhone',w:390,h:844,r:46,top:47,bot:34},android:{n:'Android',w:412,h:915,r:26,top:30,bot:20}};
+let dev='ios',land=false,live=false,tm,fs=16;
+const ta=$('#ta'),hl=$('#hl'),ln=$('#ln'),fr=$('#fr');
+const kind=f=>f==='game.js'?'game':f==='main.py'?'py':'web';
+const KW={js:'const|let|var|function|if|else|return|for|while|new|true|false|null|async|await|class|of|in',py:'def|class|if|elif|else|return|for|while|in|import|from|as|True|False|None|and|or|not|yield|lambda|with|try|except|pass|break|continue'};
+const RX={js:`(\\/\\/.*$|\\/\\*[\\s\\S]*?\\*\\/)|('[^'\\n]*'|"[^"\\n]*"|\`[^\`]*\`)|\\b(${KW.js})\\b|\\b(\\d+\\.?\\d*)\\b|\\b(game|log|console|document)\\b`,
+py:`(#.*$)|('[^'\\n]*'|"[^"\\n]*")|\\b(${KW.py})\\b|\\b(\\d+\\.?\\d*)\\b|\\b(print|range|len|list|input)\\b`,
+html:`(&lt;!--[\\s\\S]*?--&gt;)|("[^"\\n]*")|(&lt;\\/?[\\w-]+)|(?!)()|(\\b[\\w-]+(?==))`,
+css:`(\\/\\*[\\s\\S]*?\\*\\/)|('[^'\\n]*'|"[^"\\n]*")|(@[\\w-]+|!important)|(#[0-9a-fA-F]{3,8}\\b|\\b\\d+\\.?\\d*(?:px|%|em|rem|vh|vw|s|deg)?)|([\\w-]+(?=\\s*:))`};
+const lang=f=>f.endsWith('.html')?'html':f.endsWith('.css')?'css':f.endsWith('.py')?'py':'js';
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function paint(){
+ const h=esc(ta.value).replace(new RegExp(RX[lang(cur)],'gm'),(m,c,s,k,n)=>`<i class="${c?'c':s?'s':k?'k':n?'n':'a'}">${m}</i>`);
+ hl.innerHTML=h+'\n';
+ ln.textContent=Array.from({length:ta.value.split('\n').length},(_,i)=>i+1).join('\n');
+ F[cur]=ta.value;try{localStorage.setItem('pe2',JSON.stringify(F))}catch(e){}
+}
+function sync(){hl.scrollTop=ta.scrollTop;hl.scrollLeft=ta.scrollLeft;ln.scrollTop=ta.scrollTop}
+ta.addEventListener('scroll',sync);
+const API=['game.add','game.remove','game.each','game.hit','game.on','game.beep','game.burst','game.shake','game.reset','game.rand','game.score','game.bg','game.w','game.h','game.safe','game.touch','game.keys','game.tilt','log','shape:','color:','gravity:','solid:true','tag:','onTap','onCollide','vx:','vy:','text:','size:'];
+function ins(t,back=0,rep=0){ta.focus();if(rep)ta.setSelectionRange(ta.selectionStart-rep,ta.selectionEnd);
+ if(!document.execCommand('insertText',false,t))ta.setRangeText(t,ta.selectionStart,ta.selectionEnd,'end');
+ if(back)ta.setSelectionRange(ta.selectionStart-back,ta.selectionStart-back);paint();keys()}
+function keys(){const K=$('#keys');K.innerHTML='';
+ const w=(ta.value.slice(0,ta.selectionStart).match(/[\w.:]+$/)||[''])[0];
+ const m=w.length>1?API.filter(a=>a!==w&&a.toLowerCase().startsWith(w.toLowerCase())).slice(0,6):[];
+ m.forEach(a=>mk(a,()=>ins(a,0,w.length),'sg'));
+ [['Tab','  '],['( )','()',1],['{ }','{}',1],['[ ]','[]',1],[';',';'],['=>',' => '],['.','.'],["'","''",1],['=',' = '],[':',':'],['#','#'],['<>','<>',1]].forEach(([l,t,b])=>mk(l,()=>ins(t,b||0)))}
+function mk(l,f,c){const x=document.createElement('button');x.textContent=l;if(c)x.className=c;x.onpointerdown=e=>e.preventDefault();x.onclick=f;$('#keys').append(x)}
+ta.addEventListener('input',()=>{paint();keys();if(live){clearTimeout(tm);tm=setTimeout(run,900)}});
+ta.addEventListener('keyup',keys);ta.addEventListener('click',keys);
+ta.addEventListener('keydown',e=>{
+ if(e.key==='Tab'){e.preventDefault();ins('  ')}
+ else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();run()}
+ else if(e.key==='Enter'){e.preventDefault();const b=ta.value.slice(0,ta.selectionStart),l=b.slice(b.lastIndexOf('\n')+1),ind=l.match(/^\s*/)[0];
+  ins('\n'+ind+(/[{(\[]\s*$/.test(l)||(lang(cur)==='py'&&/:\s*$/.test(l))?'  ':''))}
+ else if('({['.includes(e.key)&&lang(cur)!=='py'){e.preventDefault();ins(e.key+')}]'['({['.indexOf(e.key)],1)}
+ else if(e.key==='/'&&(e.ctrlKey||e.metaKey)){e.preventDefault();const c=lang(cur)==='py'?'# ':'// ',s=ta.value.lastIndexOf('\n',ta.selectionStart-1)+1;ta.setSelectionRange(s,s);ins(c)}
+});
+function tabs(){const B=$('#files');B.innerHTML='';Object.keys(F).forEach(f=>{const b=document.createElement('button');b.textContent=f;b.className=f===cur?'on':'';b.onclick=()=>{cur=f;ta.value=F[f];tabs();paint();keys()};B.append(b)})}
+function size(){const d=DEV[dev],w=land?d.h:d.w,h=land?d.w:d.h,st=$('#stage');
+ const sc=Math.min((st.clientWidth-24)/(w+12),(st.clientHeight-24)/(h+12),1.2)||0.5;
+ $('#dev').style.cssText=`width:${w+12}px;height:${h+12}px;border-radius:${d.r}px;transform:scale(${sc})`;
+ const sh=$('#shell');sh.style.width=(w+12)*sc+'px';sh.style.height=(h+12)*sc+'px';
+ const o1=$('#o1'),o2=$('#o2');o1.style.cssText=o2.style.cssText='display:none';
+ if(!land){if(dev==='ios'){o1.style.cssText='left:50%;top:6px;width:120px;height:32px;margin-left:-60px;border-radius:20px';
+   o2.style.cssText='left:50%;bottom:12px;width:130px;height:5px;margin-left:-65px;border-radius:4px;background:#fff8'}
+  else o1.style.cssText='left:50%;top:16px;width:14px;height:14px;margin-left:-7px;border-radius:50%'}
+ $('#dl').textContent=d.n+' '+w+'×'+h+(land?' landscape':'')}
+const safe=()=>{const d=DEV[dev];return land?{top:0,bottom:d.bot/2,left:dev==='ios'?47:0,right:dev==='ios'?47:0}:{top:d.top,bottom:d.bot,left:0,right:0}};
+const LIBS=[['matter','Matter.js 0.20.0','https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js'],['howler','Howler 2.2.4','https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js'],['phaser','Phaser 3.90.0','https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js'],['pixi','PixiJS 8.6.6','https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.js'],['three','Three.js 0.159.0','https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js'],['hammer','Hammer.js 2.0.8','https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js']];
+let LON={};try{LON=JSON.parse(localStorage.getItem('pe-libs')||'{}')}catch(e){}
+const libTags=()=>LIBS.filter(l=>LON[l[0]]).map(l=>`<script src="${l[2]}" onerror="parent.postMessage({t:'err',m:'Failed to load ${l[1]}'},'*')"><\/script>`).join('');
+function libUI(){const B=$('#libs');B.innerHTML='';LIBS.forEach(l=>{const b=document.createElement('button');b.textContent=(LON[l[0]]?'✓ ':'')+l[1];b.className=LON[l[0]]?'on':'';b.onclick=()=>{LON[l[0]]=!LON[l[0]];try{localStorage.setItem('pe-libs',JSON.stringify(LON))}catch(e){}libUI()};B.append(b)})}
+const safeJS=s=>s.replace(/<\//g,'<\\/');
+function doc(f){const k=kind(f);
+ if(k==='game')return`<!DOCTYPE html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="margin:0;overflow:hidden"><canvas id="c"></canvas>${libTags()}<script>window.__SAFE=${JSON.stringify(safe())}<\/script><script>${$('#rt').textContent}<\/script><script>try{${safeJS(F['game.js'])}\n}catch(e){parent.postMessage({t:'err',m:e.message},'*')}<\/script>`;
+ if(k==='py')return`<body><script src="https://cdn.jsdelivr.net/npm/pyodide@314.0.2/pyodide.js" onerror="window.noPy=1"><\/script><script>
+const P=(t,m)=>parent.postMessage({t,m},'*'),CODE=${safeJS(JSON.stringify(F['main.py']))};
+const ld=u=>new Promise((o,r)=>{const e=document.createElement('script');e.src=u;e.onload=o;e.onerror=()=>r('load failed');document.head.append(e)});
+async function full(){if(window.noPy||typeof loadPyodide!=='function')throw 'no pyodide';
+const py=await Promise.race([loadPyodide({indexURL:'https://cdn.jsdelivr.net/npm/pyodide@314.0.2/',stdout:m=>P('log',m),stderr:m=>P('err',m)}),new Promise((_,r)=>setTimeout(()=>r('timeout'),25000))]);
+P('log','Python '+py.runPython('import sys;sys.version.split()[0]')+' (Pyodide '+py.version+')');
+try{await py.runPythonAsync(CODE);P('log','[finished]')}catch(e){P('err',String(e.message||e))}}
+async function lite(){await ld('https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt.min.js');await ld('https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt-stdlib.js');let buf='';
+Sk.configure({output:t=>buf+=t,read:x=>{if(!Sk.builtinFiles||!Sk.builtinFiles.files[x])throw 'File not found: '+x;return Sk.builtinFiles.files[x]}});
+P('log','Fallback runtime: Skulpt (Python 3 subset)');
+Sk.misceval.asyncToPromise(()=>Sk.importMainWithBody('<stdin>',false,CODE,true)).then(()=>{P('log',buf.trimEnd());P('log','[finished]')},e=>{P('log',buf.trimEnd());P('err',e.toString())})}
+full().catch(async e=>{P('log','Python 3.14 runtime unavailable here ('+e+')');try{await lite()}catch(x){P('err','No Python runtime could load: '+x)}});
+<\/script>`;
+ const pre=`<script>console.log=(...a)=>parent.postMessage({t:'log',m:a.join(' ')},'*');onerror=m=>parent.postMessage({t:'err',m:String(m)},'*')<\/script>`;
+ let h=F['index.html'];h=/<\/head>/i.test(h)?h.replace(/<\/head>/i,`<style>${F['style.css']}</style></head>`):`<style>${F['style.css']}</style>`+h;
+ const js=`<script>${safeJS(F['script.js'])}<\/script>`;
+ return libTags()+pre+(/<\/body>/i.test(h)?h.replace(/<\/body>/i,js+'</body>'):h+js)}
+function run(){const k=kind(cur);$('#log').innerHTML='';size();fr.srcdoc=doc(cur);$('#ps').classList.remove('on');add('Libraries: '+(LIBS.filter(l=>LON[l[0]]).map(l=>l[1]).join(', ')||'none')+'. Running '+cur+(k==='py'?' (loading Python...)':''),0);return k}
+function add(m,er){const d=document.createElement('div');d.textContent=m;if(er)d.className='er';$('#log').append(d);$('#log').scrollTop=1e9}
+addEventListener('message',e=>{if(e.source!==fr.contentWindow)return;const{t,m}=e.data||{};
+ if(t==='log')add(m,0);else if(t==='err')add('Error: '+m,1);
+ else if(t==='ents'){$('#ents').innerHTML=m.l.length?m.l.map(x=>'<div>'+esc(x)+'</div>').join(''):'No entities yet.';$('#fps').textContent=m.fps+' fps'}});
+function tab(t){document.body.dataset.tab=t;if(t==='preview')size()}
+$$('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
+$('#run').onclick=()=>{const k=run();if(innerWidth<900)tab(k==='py'?'console':'preview')};
+$('#rs').onclick=run;
+$('#ps').onclick=e=>{fr.contentWindow.postMessage({cmd:'pause'},'*');e.target.classList.toggle('on')};
+$('#live').onclick=e=>{live=!live;e.target.classList.toggle('on',live)};
+$('#rot').onclick=()=>{land=!land;run()};
+$$('[data-d]').forEach(b=>b.onclick=()=>{dev=b.dataset.d;$$('[data-d]').forEach(x=>x.classList.toggle('on',x===b));run()});
+$$('[data-tpl]').forEach(b=>b.onclick=()=>{if(b.dataset.tpl==='matter'){LON.matter=true;try{localStorage.setItem('pe-libs',JSON.stringify(LON))}catch(e){}libUI()}cur='game.js';F[cur]=T[b.dataset.tpl];ta.value=F[cur];tabs();paint();run();tab('preview')});
+const fz=d=>{fs=Math.max(12,Math.min(24,fs+d));document.documentElement.style.setProperty('--fs',fs+'px')};
+$('#fm').onclick=()=>fz(-1);$('#fp').onclick=()=>fz(1);
+$('#th').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
+$('#cp').onclick=async()=>{try{await navigator.clipboard.writeText(doc(cur));add('Standalone HTML copied. Paste it into a .html file to host or wrap with Capacitor.',0)}catch(e){add('Clipboard blocked here. Copy your code from the editor instead.',1)}tab('console')};
+new ResizeObserver(size).observe($('#stage'));
+libUI();ta.value=F[cur];tabs();paint();keys();size();run();
+</script></body></html>
